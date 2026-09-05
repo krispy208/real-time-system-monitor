@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from app.models.telemetry import TelemetryReading
+from app.monitoring import Monitor
 
 SYSTEM_IDS = ("SYSTEM-01", "SYSTEM-02", "SYSTEM-03")
 
@@ -188,14 +189,18 @@ class TelemetrySimulator:
 
 
 def run(interval_seconds: float = 1.0) -> None:
-    """Print telemetry readings to stdout until interrupted."""
+    """Print telemetry readings and monitoring status to stdout until interrupted."""
     simulator = TelemetrySimulator()
-    print("Starting telemetry simulator (Ctrl+C to stop)\n")
+    monitor = Monitor()
+    print("Starting telemetry simulator with monitoring (Ctrl+C to stop)\n")
 
     try:
         while True:
             for reading in simulator.next_readings():
-                print(reading.format_line())
+                evaluation = monitor.evaluate(reading)
+                print(evaluation.format_line())
+                for alert in monitor.latest_alerts:
+                    print(alert.format_line())
             time.sleep(interval_seconds)
     except KeyboardInterrupt:
         print("\nSimulator stopped.")
