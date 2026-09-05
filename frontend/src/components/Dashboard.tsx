@@ -181,7 +181,7 @@ export function Dashboard() {
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
         <SummaryBar systems={systems} />
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {SYSTEM_IDS.map((systemId) => {
             const system = systems[systemId]
             if (!system) {
@@ -219,14 +219,12 @@ export function Dashboard() {
             title={`${selectedSystemId} temperature`}
             data={selectedChartData}
             dataKey="temperature"
-            unit="°C"
             color="#38bdf8"
           />
           <MetricChart
             title={`${selectedSystemId} latency`}
             data={selectedChartData}
             dataKey="latency"
-            unit=" ms"
             color="#a78bfa"
           />
         </section>
