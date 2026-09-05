@@ -29,6 +29,7 @@ class TelemetryReadingResponse(BaseModel):
     memory_usage: float
     temperature: float
     latency: float
+    status: str
 
 
 class AlertResponse(BaseModel):

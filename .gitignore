@@ -27,6 +27,7 @@ frontend/.vite/
 *.db
 *.sqlite
 *.sqlite3
+backend/data/
 
 # IDE / OS
 .idea/

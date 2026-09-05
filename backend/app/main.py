@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.api.routes import ws_telemetry
+from app.core.config import settings
+from app.db.repository import TelemetryRepository
 from app.monitoring.monitor import Monitor
 from app.services.telemetry_runner import run_telemetry_loop, seed_initial_readings
 from app.simulator import TelemetrySimulator
@@ -15,17 +17,27 @@ from app.ws.connection_manager import ConnectionManager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    repository = TelemetryRepository(settings.database_path)
+    repository.initialize()
+
     store = StateStore()
     simulator = TelemetrySimulator()
     monitor = Monitor()
     connection_manager = ConnectionManager()
 
-    seed_initial_readings(store, simulator, monitor)
+    seed_initial_readings(store, simulator, monitor, repository)
 
     app.state.store = store
+    app.state.repository = repository
     app.state.connection_manager = connection_manager
     task = asyncio.create_task(
-        run_telemetry_loop(store, simulator, monitor, connection_manager)
+        run_telemetry_loop(
+            store,
+            simulator,
+            monitor,
+            repository,
+            connection_manager,
+        )
     )
 
     yield

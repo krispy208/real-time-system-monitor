@@ -1,6 +1,9 @@
 import asyncio
 import logging
 
+from app.db.repository import TelemetryRepository
+from app.models.alert import Alert
+from app.monitoring.evaluator import MonitoringEvaluation
 from app.monitoring.monitor import Monitor
 from app.simulator import TelemetrySimulator
 from app.state.store import StateStore
@@ -12,10 +15,21 @@ logger = logging.getLogger(__name__)
 DEFAULT_INTERVAL_SECONDS = 1.0
 
 
+def persist_reading(
+    repository: TelemetryRepository,
+    evaluation: MonitoringEvaluation,
+    alerts: list[Alert],
+) -> None:
+    """Write one telemetry evaluation and any new alerts to SQLite."""
+    repository.insert_telemetry(evaluation)
+    repository.insert_alerts(alerts)
+
+
 async def run_telemetry_loop(
     store: StateStore,
     simulator: TelemetrySimulator,
     monitor: Monitor,
+    repository: TelemetryRepository,
     connection_manager: ConnectionManager | None = None,
     interval_seconds: float = DEFAULT_INTERVAL_SECONDS,
 ) -> None:
@@ -27,6 +41,7 @@ async def run_telemetry_loop(
                 evaluation = monitor.evaluate(reading)
                 alerts = monitor.latest_alerts
                 store.record(evaluation, alerts)
+                persist_reading(repository, evaluation, alerts)
 
                 if connection_manager is not None:
                     message = build_telemetry_message(evaluation, alerts)
@@ -42,8 +57,11 @@ def seed_initial_readings(
     store: StateStore,
     simulator: TelemetrySimulator,
     monitor: Monitor,
+    repository: TelemetryRepository,
 ) -> None:
-    """Populate the store before the API starts accepting requests."""
+    """Populate the store and database before the API starts accepting requests."""
     for reading in simulator.next_readings():
         evaluation = monitor.evaluate(reading)
-        store.record(evaluation, monitor.latest_alerts)
+        alerts = monitor.latest_alerts
+        store.record(evaluation, alerts)
+        persist_reading(repository, evaluation, alerts)
