@@ -17,6 +17,7 @@ from app.ws.connection_manager import ConnectionManager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Initialize shared resources, start telemetry generation, and clean up on shutdown."""
     repository = TelemetryRepository(settings.database_path)
     repository.initialize()
 
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
     monitor = Monitor()
     connection_manager = ConnectionManager()
 
+    # Avoid empty /api/systems responses on the first request after startup.
     seed_initial_readings(store, simulator, monitor, repository)
 
     app.state.store = store
@@ -42,6 +44,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
+    # Cancel the background loop so shutdown does not leave a running task.
     task.cancel()
     try:
         await task

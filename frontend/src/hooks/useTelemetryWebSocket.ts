@@ -1,3 +1,9 @@
+/**
+ * Live telemetry WebSocket hook.
+ *
+ * Manages connect / reconnect / cleanup lifecycle. Uses a ref for onMessage so
+ * the socket is not recreated every time the parent callback identity changes.
+ */
 import { useEffect, useRef, useState } from 'react'
 
 import { WS_RECONNECT_DELAY_MS, WS_TELEMETRY_URL } from '../config'

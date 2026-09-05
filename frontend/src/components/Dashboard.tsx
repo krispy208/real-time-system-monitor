@@ -21,6 +21,8 @@ import { SystemCard } from './SystemCard'
 
 const MAX_ALERTS = 100
 
+// Chart history is keyed by system so switching the selector shows accumulated
+// data immediately instead of waiting for new WebSocket messages.
 function createEmptyChartHistory(): Record<SystemId, ChartPoint[]> {
   return {
     'SYSTEM-01': [],
@@ -68,6 +70,7 @@ export function Dashboard() {
   useEffect(() => {
     let cancelled = false
 
+    // REST bootstrap: populate cards, summary, and alert history before live stream.
     async function loadInitialData() {
       try {
         const [systemsResponse, alertsResponse] = await Promise.all([
@@ -116,6 +119,7 @@ export function Dashboard() {
     setChartHistory((previous) => {
       const nextPoint = toChartPoint(message)
       const systemId = message.system_id as SystemId
+      // Immutable append + slice keeps React state predictable and caps chart points.
       const updatedHistory = [...(previous[systemId] ?? []), nextPoint].slice(
         -MAX_CHART_POINTS,
       )
@@ -136,6 +140,7 @@ export function Dashboard() {
     }
   }, [])
 
+  // Open WebSocket only after REST bootstrap succeeds.
   const { connectionState } = useTelemetryWebSocket({
     onMessage: handleTelemetryMessage,
     enabled: !loading && error === null,

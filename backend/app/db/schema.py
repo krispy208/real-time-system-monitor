@@ -1,3 +1,5 @@
+"""SQLite DDL for telemetry and alert persistence."""
+
 CREATE_TELEMETRY_TABLE = """
 CREATE TABLE IF NOT EXISTS telemetry (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

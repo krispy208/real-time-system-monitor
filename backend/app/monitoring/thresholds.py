@@ -1,3 +1,9 @@
+"""Centralized monitoring threshold configuration.
+
+All alert evaluation reads from here so threshold values are not scattered
+across the codebase.
+"""
+
 from dataclasses import dataclass
 
 from app.monitoring.status import MONITORED_METRICS

@@ -29,7 +29,11 @@ def evaluate_reading(
     reading: TelemetryReading,
     thresholds: dict[str, MetricThresholds] | None = None,
 ) -> tuple[HealthStatus, dict[str, HealthStatus]]:
-    """Evaluate all metrics and return overall status plus per-metric statuses."""
+    """Evaluate all metrics and derive overall status from the worst metric.
+
+    One critical metric (for example temperature) means the whole system is
+    treated as critical even if other metrics are healthy.
+    """
     metric_statuses = {
         metric: evaluate_metric(metric, getattr(reading, metric), thresholds)
         for metric in MONITORED_METRICS

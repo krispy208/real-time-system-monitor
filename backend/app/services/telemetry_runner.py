@@ -1,3 +1,15 @@
+"""Background telemetry generation and persistence pipeline.
+
+Each tick follows this path:
+
+    TelemetrySimulator -> Monitor -> StateStore -> SQLite -> WebSocket broadcast
+
+The loop is async so ``asyncio.sleep`` yields control back to FastAPI instead
+of blocking the event loop with ``time.sleep``. Live dashboards and WebSocket
+clients read from in-memory StateStore; SQLite is an append-only history layer
+that survives restarts but is not queried on every live update.
+"""
+
 import asyncio
 import logging
 
@@ -20,7 +32,7 @@ def persist_reading(
     evaluation: MonitoringEvaluation,
     alerts: list[Alert],
 ) -> None:
-    """Write one telemetry evaluation and any new alerts to SQLite."""
+    """Append one evaluation and any transition alerts to SQLite."""
     repository.insert_telemetry(evaluation)
     repository.insert_alerts(alerts)
 
@@ -33,7 +45,7 @@ async def run_telemetry_loop(
     connection_manager: ConnectionManager | None = None,
     interval_seconds: float = DEFAULT_INTERVAL_SECONDS,
 ) -> None:
-    """Generate telemetry in the background and persist results to the state store."""
+    """Generate readings once per second and fan them out to memory, disk, and WebSockets."""
     logger.info("Telemetry background loop started")
     try:
         while True:
@@ -59,7 +71,7 @@ def seed_initial_readings(
     monitor: Monitor,
     repository: TelemetryRepository,
 ) -> None:
-    """Populate the store and database before the API starts accepting requests."""
+    """Prime in-memory and SQLite state before the first HTTP/WebSocket request."""
     for reading in simulator.next_readings():
         evaluation = monitor.evaluate(reading)
         alerts = monitor.latest_alerts

@@ -1,5 +1,13 @@
 """Telemetry simulator for three monitored systems.
 
+Values drift toward targets rather than being re-randomized each tick so the
+time series resembles real infrastructure metrics, which change gradually.
+
+Each system follows an internal simulation state machine:
+HEALTHY -> DEGRADING -> RECOVERING -> HEALTHY. That controls how synthetic
+data is generated. It is separate from the monitoring layer's HEALTHY /
+WARNING / CRITICAL evaluation, which judges the resulting metric values.
+
 Run from the backend directory:
 
     python -m app.simulator
@@ -38,6 +46,8 @@ METRIC_NAMES = ("cpu_usage", "memory_usage", "temperature", "latency")
 
 
 class Phase(str, Enum):
+    """Internal simulation phases — not the same as monitoring health status."""
+
     HEALTHY = "healthy"
     DEGRADING = "degrading"
     RECOVERING = "recovering"
@@ -45,13 +55,17 @@ class Phase(str, Enum):
 
 @dataclass
 class MetricTracker:
-    """Tracks one metric's current value and the healthy target it drifts toward."""
+    """Tracks one metric's current value and the healthy target it drifts toward.
+
+    Separating *value* from *healthy_target* lets the simulator recover to a
+    sensible baseline after stress without losing its long-term drift center.
+    """
 
     value: float
     healthy_target: float
 
     def step_toward(self, target: float, max_delta: float) -> None:
-        """Move the current value closer to *target* by at most *max_delta*."""
+        """Move toward *target* in bounded steps instead of jumping randomly."""
         delta = target - self.value
         if abs(delta) <= max_delta:
             self.value = target
@@ -66,7 +80,7 @@ class MetricTracker:
 
 @dataclass
 class SystemSimulator:
-    """Simulates telemetry for a single system with gradual drift and degradation."""
+    """Simulates one system with gradual drift and temporary stress events."""
 
     system_id: str
     phase: Phase = Phase.HEALTHY
@@ -147,6 +161,7 @@ class SystemSimulator:
         return {primary, secondary}
 
     def _update_intensity(self) -> None:
+        """Ramp stress from 0.0 to 1.0 while degrading, then back to 0.0 while recovering."""
         if self.phase == Phase.HEALTHY:
             self.intensity = 0.0
             return
@@ -166,6 +181,7 @@ class SystemSimulator:
 
             if name in self.stressed_metrics:
                 stress_target = self.stress_targets[name]
+                # Interpolate between healthy and stress targets using intensity.
                 target = tracker.healthy_target + (stress_target - tracker.healthy_target) * self.intensity
             else:
                 target = tracker.healthy_target

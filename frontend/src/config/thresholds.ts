@@ -1,9 +1,10 @@
 /**
  * Frontend chart threshold configuration.
  *
- * These values mirror the backend monitoring thresholds used for alert detection.
- * In a larger production system, threshold configuration should ideally be served
- * by the backend/API so clients do not duplicate threshold logic.
+ * These values mirror backend monitoring thresholds (see app/monitoring/thresholds.py)
+ * and are used only for chart reference lines and Y-axis scaling — not alert logic.
+ * In production, threshold configuration should ideally be served by the backend/API
+ * so clients do not duplicate threshold values.
  */
 export interface MetricThresholds {
   warning: number

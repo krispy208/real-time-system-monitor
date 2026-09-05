@@ -1,3 +1,5 @@
+"""WebSocket client registry and broadcast helpers."""
+
 import asyncio
 import logging
 
@@ -7,7 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 class ConnectionManager:
-    """Tracks active WebSocket clients and broadcasts JSON messages to all of them."""
+    """Track active dashboard WebSocket clients and push telemetry JSON to all of them.
+
+    Broadcast is async because ``send_json`` performs network I/O. Clients that
+    fail to receive a message are treated as stale and removed so one broken
+    connection cannot block updates to the rest.
+    """
 
     def __init__(self) -> None:
         self._connections: set[WebSocket] = set()

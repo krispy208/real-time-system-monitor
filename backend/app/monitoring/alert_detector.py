@@ -31,10 +31,14 @@ def build_alert_message(
 
 
 class AlertDetector:
-    """Emits alerts only when a metric's health status changes."""
+    """Emit alerts only when a metric crosses a health boundary.
+
+    Stores the previous HealthStatus per (system, metric) so a metric that
+    stays above a threshold does not generate the same alert every second.
+    """
 
     def __init__(self) -> None:
-        # system_id -> metric -> last known HealthStatus
+        # Previous status per system/metric; defaults to HEALTHY on first sight.
         self._previous_statuses: dict[str, dict[str, HealthStatus]] = {}
 
     def process(

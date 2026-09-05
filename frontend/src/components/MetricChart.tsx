@@ -25,6 +25,8 @@ interface MetricChartProps {
 
 export function MetricChart({ title, data, dataKey, color }: MetricChartProps) {
   const thresholds = CHART_THRESHOLDS[dataKey]
+  // Fixed domains from threshold config keep warning/critical lines visible
+  // even while live telemetry is still in a healthy range.
   const unit = thresholds.unit === '°C' ? '°C' : ' ms'
   const hasData = data.length > 0
 

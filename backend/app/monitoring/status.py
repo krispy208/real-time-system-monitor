@@ -1,3 +1,10 @@
+"""Monitoring health status types and severity ordering.
+
+HealthStatus here describes externally evaluated metric/system health based on
+thresholds. It must not be confused with the simulator's internal Phase enum
+(healthy/degrading/recovering), which only controls synthetic data generation.
+"""
+
 from enum import Enum
 
 

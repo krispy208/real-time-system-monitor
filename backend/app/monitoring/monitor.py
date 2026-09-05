@@ -6,7 +6,11 @@ from app.monitoring.thresholds import get_thresholds, validate_thresholds
 
 
 class Monitor:
-    """Evaluates telemetry readings and emits alerts on metric status changes."""
+    """Evaluate readings against thresholds and surface transition-based alerts.
+
+    Monitoring inspects metric values only; it has no knowledge of simulator
+    phases or how the data was produced.
+    """
 
     def __init__(self) -> None:
         thresholds = get_thresholds()

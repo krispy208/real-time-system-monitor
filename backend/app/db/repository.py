@@ -8,7 +8,13 @@ from app.monitoring.evaluator import MonitoringEvaluation
 
 
 class TelemetryRepository:
-    """SQLite persistence for telemetry readings and alerts."""
+    """Persist telemetry and alerts to a local SQLite file.
+
+    Uses stdlib sqlite3 with parameterized queries for safety and simplicity.
+    Writes are synchronous and guarded by a lock; at ~3 readings/sec this is
+    fine for the demo but would need a write queue or async driver at much
+    higher throughput.
+    """
 
     def __init__(self, database_path: Path) -> None:
         self._database_path = database_path
@@ -85,6 +91,7 @@ class TelemetryRepository:
                 connection.commit()
 
     def get_telemetry_history(self, system_id: str, limit: int) -> list[dict]:
+        # Fetch newest rows first, then reverse for chronological API output.
         with self._lock:
             with self._connect() as connection:
                 rows = connection.execute(

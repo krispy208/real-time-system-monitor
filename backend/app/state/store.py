@@ -1,3 +1,9 @@
+"""In-memory live state for systems, recent history, and alerts.
+
+StateStore serves fast reads for ``/api/systems`` and WebSocket broadcasting.
+Historical REST queries read from SQLite instead of the bounded deques here.
+"""
+
 from collections import deque
 from dataclasses import dataclass, field
 from threading import Lock
@@ -13,6 +19,8 @@ MAX_ALERTS = 100
 
 @dataclass
 class SystemState:
+    """Latest values plus a small rolling window for in-process use."""
+
     latest_reading: TelemetryReading | None = None
     latest_evaluation: MonitoringEvaluation | None = None
     telemetry_history: deque[TelemetryReading] = field(
@@ -21,7 +29,11 @@ class SystemState:
 
 
 class StateStore:
-    """Thread-safe in-memory store for latest telemetry, evaluations, and alerts."""
+    """Thread-safe in-memory store for current telemetry and recent alerts.
+
+    Bounded deques cap memory use while still supporting quick local history
+    access. Long-term history lives in SQLite.
+    """
 
     def __init__(self, system_ids: tuple[str, ...] = SYSTEM_IDS) -> None:
         self._system_ids = system_ids
