@@ -15,6 +15,7 @@ import {
   type ChartMetricKey,
 } from '../config/thresholds'
 import type { ChartPoint } from '../types'
+import { calculateYDomain, defaultYDomain } from '../utils/chartDomain'
 
 interface MetricChartProps {
   title: string
@@ -23,12 +24,13 @@ interface MetricChartProps {
   color: string
 }
 
+const CHART_MARGIN = { top: 10, right: 16, left: 4, bottom: 4 }
+
 export function MetricChart({ title, data, dataKey, color }: MetricChartProps) {
   const thresholds = CHART_THRESHOLDS[dataKey]
-  // Fixed domains from threshold config keep warning/critical lines visible
-  // even while live telemetry is still in a healthy range.
   const unit = thresholds.unit === '°C' ? '°C' : ' ms'
   const hasData = data.length > 0
+  const yDomain = hasData ? calculateYDomain(dataKey, data) : defaultYDomain(dataKey)
 
   return (
     <section className="rounded-lg border border-slate-800 bg-slate-900/70 p-4">
@@ -37,11 +39,11 @@ export function MetricChart({ title, data, dataKey, color }: MetricChartProps) {
         {!hasData ? (
           <div className="relative h-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={[]}>
+              <LineChart data={[]} margin={CHART_MARGIN}>
                 <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
                 <XAxis tick={{ fill: '#94a3b8', fontSize: 12 }} />
                 <YAxis
-                  domain={thresholds.yDomain}
+                  domain={yDomain}
                   tick={{ fill: '#94a3b8', fontSize: 12 }}
                   unit={thresholds.unit === '°C' ? '°C' : undefined}
                 />
@@ -54,7 +56,7 @@ export function MetricChart({ title, data, dataKey, color }: MetricChartProps) {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
+            <LineChart data={data} margin={CHART_MARGIN}>
               <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
               <XAxis
                 dataKey="label"
@@ -62,7 +64,7 @@ export function MetricChart({ title, data, dataKey, color }: MetricChartProps) {
                 minTickGap={24}
               />
               <YAxis
-                domain={thresholds.yDomain}
+                domain={yDomain}
                 tick={{ fill: '#94a3b8', fontSize: 12 }}
                 unit={thresholds.unit === '°C' ? '°C' : undefined}
               />
@@ -109,10 +111,11 @@ function renderThresholdLines(
         strokeDasharray="4 4"
         strokeWidth={1.5}
         label={{
-          value: `Warning ${thresholds.warning}${unit}`,
+          value: `Warn ${thresholds.warning}${unit}`,
           fill: THRESHOLD_LINE_STYLES.warning.labelFill,
-          fontSize: 11,
-          position: 'insideTopRight',
+          fontSize: 10,
+          position: 'insideRight',
+          dy: -8,
         }}
       />
       <ReferenceLine
@@ -121,10 +124,11 @@ function renderThresholdLines(
         strokeDasharray="4 4"
         strokeWidth={1.5}
         label={{
-          value: `Critical ${thresholds.critical}${unit}`,
+          value: `Crit ${thresholds.critical}${unit}`,
           fill: THRESHOLD_LINE_STYLES.critical.labelFill,
-          fontSize: 11,
-          position: 'insideBottomRight',
+          fontSize: 10,
+          position: 'insideRight',
+          dy: 10,
         }}
       />
     </>
