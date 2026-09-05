@@ -4,10 +4,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.router import api_router
+from app.api.routes import ws_telemetry
 from app.monitoring.monitor import Monitor
 from app.services.telemetry_runner import run_telemetry_loop, seed_initial_readings
 from app.simulator import TelemetrySimulator
 from app.state.store import StateStore
+from app.ws.connection_manager import ConnectionManager
 
 
 @asynccontextmanager
@@ -15,11 +17,15 @@ async def lifespan(app: FastAPI):
     store = StateStore()
     simulator = TelemetrySimulator()
     monitor = Monitor()
+    connection_manager = ConnectionManager()
 
     seed_initial_readings(store, simulator, monitor)
 
     app.state.store = store
-    task = asyncio.create_task(run_telemetry_loop(store, simulator, monitor))
+    app.state.connection_manager = connection_manager
+    task = asyncio.create_task(
+        run_telemetry_loop(store, simulator, monitor, connection_manager)
+    )
 
     yield
 
@@ -38,3 +44,4 @@ app = FastAPI(
 )
 
 app.include_router(api_router)
+app.include_router(ws_telemetry.router, prefix="/ws", tags=["websocket"])
