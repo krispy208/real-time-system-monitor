@@ -49,3 +49,54 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
+```
+
+The backend runs at `http://localhost:8000`.
+
+FastAPI's API documentation is available at `http://localhost:8000/docs`.
+
+### Frontend
+
+In a separate terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` to view the dashboard.
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/systems` | Get the current state of all systems |
+| GET | `/api/systems/{system_id}` | Get the current state of one system |
+| GET | `/api/telemetry/{system_id}` | Get historical telemetry |
+| GET | `/api/alerts` | Get alert history |
+| WebSocket | `/ws/telemetry` | Receive live telemetry updates |
+
+## Project Structure
+
+```text
+real-time-system-monitor/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── db/
+│   │   ├── monitoring/
+│   │   ├── services/
+│   │   ├── state/
+│   │   └── simulator.py
+│   └── requirements.txt
+│
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── hooks/
+│       └── types/
+│
+└── docs/
+    └── images/
+```
