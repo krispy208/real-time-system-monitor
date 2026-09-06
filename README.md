@@ -176,10 +176,23 @@ python scripts/ws_test_client.py --count 10
 
 ## Screenshots
 
-<!-- Add screenshots here after capturing the running dashboard -->
-| Dashboard overview | Live charts and alerts |
-|---|---|
-| _Screenshot placeholder_ | _Screenshot placeholder_ |
+### Live Monitoring Dashboard
+
+Real-time system health and telemetry streamed from the FastAPI backend over WebSockets.
+
+![Live Monitoring Dashboard](docs/images/dashboard.png)
+
+### Telemetry Visualization
+
+Live temperature and latency history with warning and critical threshold indicators.
+
+![Telemetry Charts](docs/images/charts.png)
+
+### Alert Detection
+
+Alerts are generated when monitored metrics transition between HEALTHY, WARNING, and CRITICAL states.
+
+![Alert Detection](docs/images/alerts.png)
 
 Suggested captures:
 
