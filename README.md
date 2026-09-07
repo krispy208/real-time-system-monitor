@@ -29,7 +29,7 @@ Telemetry and alerts are also saved to SQLite so historical data remains availab
 
 ### Dashboard
 
-![Dashboard](docs/images/dashboard.png)
+![Dashboard](docs/images/dashboard2.png)
 
 ### Live Telemetry
 
